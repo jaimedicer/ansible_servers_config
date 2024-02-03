@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# ncsync (nextcloud sync)
+/usr/bin/nextcloudcmd -u {{ ncuser }} -h -p '{{ ncpassword }}' --path Linux /home/{{ default_user }}/Nextcloud_Linux {{ ncfqdn }} \
+&& chown -R {{ default_user }}:{{ default_user }} /home/{{ default_user }}/Nextcloud_Linux \
+# && touch /home/{{ default_user }}/log/last_nc_linux_synced

@@ -1,0 +1,7 @@
+[vagrant]
+vagrant1 ansible_host=192.168.56.11
+vagrant2 ansible_host=192.168.56.12
+vagrant3 ansible_host=192.168.56.13
+
+[vagrant:vars]
+ansible_user=vagrant

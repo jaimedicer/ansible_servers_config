@@ -1,0 +1,33 @@
+# ALIASES COMUNES (USER Y ROOT)
+alias ll='ls -lh --group-directories-first --time-style=+%d-%m-%Y'
+alias lll='ls -lha --group-directories-first --time-style=+%d-%m-%Y'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+alias x='exit'
+alias git='LANGUAGE=en_US git'  # Set Git language to English
+if [ -z $(which reboot) ]; then		# Si no existe el comando reboot...
+        alias reboot='sudo shutdown --reboot now'
+fi
+if [ -z $(which poweroff) ]; then	# Si no existe el comando poweroff...
+        alias poweroff='sudo shutdown --poweroff now'
+fi
+
+# ALIASES SOLO PARA $USER
+if [ "$USER" != "root" ]; then  # Solo para user
+        alias r='sudo su -l'
+
+        ### Aliases exclusivos Arch
+        if [ $(grep -c 'ID=arch' /etc/os-release) != '0' ]; then
+                alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'
+        fi
+fi
+
+# ALIASES SOLO PARA ROOT
+if [ "$USER" = "root" ]; then  # Solo para root
+
+        ### Aliases exclusivos Arch
+        if [ $(grep -c 'ID=arch' /etc/os-release) != '0' ]; then
+                alias update-grub='grub-mkconfig -o /boot/grub/grub.cfg'
+        fi
+fi

@@ -1,0 +1,10 @@
+chmod 600 ~/.bash_custom
+
+# COLOR PARA LS
+export LS_OPTIONS='--color=auto'
+eval "$(dircolors)"
+alias ls='ls $LS_OPTIONS'
+
+# Exporta EDITOR=nano como environment
+export EDITOR=/usr/bin/nano
+

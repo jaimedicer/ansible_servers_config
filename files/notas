@@ -1,0 +1,114 @@
+#!/bin/bash
+
+### COLOCAR ESTE FICHERO EN /usr/local/bin ###
+
+
+### LOCALIZACION DEL FICHERO "Notas.txt" Y COMPROBACION DE QUE EL FICHERO EXISTE ###
+
+file=$(find /home/*/Nex* -type f -name Notas.txt)
+
+#echo "file es $file"									# DEBUG
+
+if [ -z $file ]				# no existe el fichero Notas.txt
+then
+	echo ""
+	echo "ERROR: No se localiza el fichero Notas.txt"
+	exit 10
+fi
+
+
+### FUNCION help PARA MOSTRAR AYUDA ###
+
+help () {
+	cat <<- _EOF_
+
+		  Modo de empleo: notas [COMANDO], o notas [OPCIÓN]
+
+		  Muestra las notas del comando especificado en la salida estándar:
+		      Opciones:
+		        -c, --clase CLASE	   muestra el listado de comandos de la clase especificada
+		        -l, --list		   muestra el listado de clases existentes
+		        -t, --todos		   muestra el listado de todos los comandos y las categorías a las que pertenece
+		        -h, --help		   muestra esta ayuda
+
+	_EOF_
+}
+
+
+### EJECUCION SIN NINGUN PARAMETRO: MUESTRA FICHERO NOTAS.TXT COMPLETO ###
+
+if [ -z $1 ]
+then
+	less $file
+	exit 0
+fi
+
+
+### DEPURACION NUM PARAMETROS ###
+
+check_params () {
+	if [ $# -ne $params ]                                 # el número de parámetros no es correcto.
+	then
+#		echo "\$\# = $# y \$params = $params"					# DEBUG
+       		echo ""
+       		echo "ERROR: Número de parámetros erróneo."
+       		help   
+       		exit 37
+	fi
+}
+
+
+case $1 in
+	-c | --clase) 	echo "S1 es la opcion -c"			## -c clase
+			params=2					## num params correcto
+			check_params "$@" ;;
+
+	-l | --list) 	echo "S1 es la opcion -l"			## -l lista clases
+			params=1
+			check_params "$@" ;;
+
+	-t | --todos) 				## -t lista comandos
+			params=1
+			check_params "$@"
+			grep ^[[:alnum:]]*:[^:] $file | sort ;;
+
+	-h | --help) 	echo "S1 es la opción -h"				## -h help
+			params=1
+			check_params "$@"
+			help ;;
+
+	-*) 	echo ""
+		echo "ERROR: Opción no reconocida"				## opción errónea
+		help
+		exit 5 ;;
+
+	*) 	# echo "S1 es el comando"					## comando (no opción)
+		params=1
+                check_params "$@"
+		if [ $(grep ^$1: $file | wc -l) -eq 0 ]         # no hay una entrada para ese comando
+		then
+        		echo ""
+			echo "ERROR: El comando no se encuentra en el listado de comandos disponibles"
+        		help
+			exit 33
+		fi
+
+		### IMPRIME OUTPUT ###
+
+		# Primera linea a imprimir en stdout
+		primera=$(($(grep -n ^$1: $file | cut -d ':' -f 1) + 1))
+		#echo "Primera: $primera"                                                       # DEBUG
+
+		# Número de líneas a imprimir en stdout
+		lineas=$(($(grep -A 300 ^$1: $file | grep -n ::: | awk 'NR==1' | cut -d ':' -f 1) - 1))
+		#echo "Numero de lineas a imprimir: $lineas"                                    # DEBUG
+
+		# sleep 5                                                                       # DEBUG
+		until [ $lineas -eq 0 ]
+		do
+        		awk "NR==$primera" $file
+        		primera=$(($primera + 1))
+        		lineas=$(($lineas - 1))
+		done
+esac
+

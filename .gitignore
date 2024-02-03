@@ -40,6 +40,7 @@ prueba.*
 /tmp
 /passwords
 /ssh_keys
+/pruebas
 /.vagrant
 Vagrantfile
 

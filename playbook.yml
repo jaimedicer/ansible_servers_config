@@ -1,0 +1,246 @@
+
+---
+- name: playbook
+  hosts: vagrant
+  vars_files:
+    - secrets.yml
+  vars_prompt:
+    - name: ncupdate
+      prompt: ¿Quieres actualizar el cliente Nextcloud_Linux durante la configuración? (s/N)
+      private: false
+      default: "no"
+
+  handlers:
+    - name: restart cron
+      become: true
+      systemd:
+        name: cron
+        state: restarted
+    - name: restart ntp
+      become: true
+      systemd:
+        name: systemd-timesyncd
+        state: restarted
+    - name: reboot
+      become: true
+      reboot:
+
+  tasks:
+    - name: Set timezone
+      become: true
+      timezone:
+        name: "{{ time_zone }}"
+      notify: restart cron
+
+    - name: Se asegura que ntp está activado
+      become: true
+      systemd:
+        name: systemd-timesyncd
+#        state: started
+        enabled: true
+      notify:
+        - restart ntp
+        - restart cron
+
+    - name: Actualiza todos los paquetes
+      become: true
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+        upgrade: full
+
+    - name: Instala algunos paquetes si no están
+      become: true
+      apt:
+        name:
+          - tree
+          - adduser
+          - sudo
+          - python3
+          - python3-passlib
+          - nextcloud-desktop-cmd
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Asigna la salida de /etc/passwd a la var usuarios
+      command: cat /etc/passwd
+      register: usuarios
+      changed_when: false
+
+    - name: Crea usuario {{ default_user }} y cambia contraseña de {{ default_user }} y root. Skipping si {{ default_user }} existe
+      become: true
+      when:  default_user is not in usuarios.stdout
+      no_log: true
+      block:
+        - name: Crea usuario {{ default_user }} si aun no existe
+          user:
+            name: "{{ default_user }}"
+            groups:
+              - users
+              - sudo
+            append: true
+            create_home: true
+            shell: /bin/bash
+            state: present
+            password: "{{ default_user_password | password_hash('sha512') }}"
+        - name: Cambia contraseña al usuario root
+          user:
+            name: root
+            password: "{{ root_password | password_hash('sha512') }}"
+
+    - name: Generación locales
+      become: true
+      community.general.locale_gen:
+        name: es_ES.UTF-8
+
+    - name: Configuración locales. Skipping si ya está en español.
+      become: true
+      shell: |
+        localectl set-locale es_ES.UTF-8
+        localectl set-x11-keymap es
+      when: ansible_facts['env']['LANG'] != "es_ES.UTF-8"
+      notify: reboot
+
+    - name: Crea carpeta Nextcloud_Linux
+      become: true
+      file:
+        path: "/home/{{ default_user }}/Nextcloud_Linux"
+        state: directory
+        owner: "{{ default_user }}"
+        group: "{{ default_user }}"
+
+    - name: Copia .ncsync a /home/{{ default_user }}
+      become: true
+      template:
+        src: templates/ncsync.j2
+        dest: "/home/{{ default_user }}/.ncsync"
+        owner: "{{ default_user }}"
+        group: "{{ default_user }}"
+        mode: 0600
+
+    - name: Sources .ncsync en .bashrc de cada usuario
+      become: true
+      blockinfile:
+        path: "/home/{{ default_user }}/.bashrc"
+        # prepend_newline: true    No funciona en esta version de ansible
+        block: |
+          if [ -f ~/.ncsync ]; then
+            source ~/.ncsync
+          fi
+        marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .ncsync"
+
+    - name: Crea directorio /home/{{ default_user }}/bin
+      become: true
+      file:
+        path: "/home/{{ default_user }}/bin"
+        owner: "{{ default_user }}"
+        group: "{{ default_user }}"
+        state: directory
+
+    - name: Copia nextcloud_linux_update.sh a /home/{{ default_user }}/bin
+      become: true
+      template:
+        src: templates/nextcloud_linux_update.sh.j2
+        dest: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
+        owner: "{{ default_user }}"
+        group: "{{ default_user }}"
+        mode: 0700
+
+    - name: Añade orden para actualizar Nextcloud Linux a diario a las 7 AM
+      become: true
+      cron:
+        name: Nextcloud Linux update
+        user: "{{ default_user }}"
+        hour: 7
+        job: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
+
+    - name: Copia .sudo_plugin a las carpetas home de los usuarios
+      become: true
+      copy:
+        src: files/sudo_plugin
+        dest: "{{ item.destino }}/.sudo_plugin"
+        owner: "{{ item.usuario }}"
+        group: "{{ item.usuario }}"
+        mode: 0600
+      loop:
+        - usuario: "{{ default_user }}"
+          destino: "/home/{{ default_user }}"
+        - usuario: vagrant
+          destino: /home/vagrant
+        - usuario: root
+          destino: /root
+
+    - name: Sources .sudo_plugin en .bashrc de cada usuario
+      become: true
+      blockinfile:
+        path: "{{ item.destino }}/.bashrc"
+        # prepend_newline: true    No funciona en esta version de ansible
+        block: |
+          if [ -f ~/.sudo_plugin ]; then
+            source ~/.sudo_plugin
+          fi
+        marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .sudo_plugin"
+      loop:
+        - usuario: "{{ default_user }}"
+          destino: "/home/{{ default_user }}"
+        - usuario: vagrant
+          destino: /home/vagrant
+        - usuario: root
+          destino: /root
+
+    - name: Copia .bash_aliases a las carpetas home de los usuarios
+      become: true
+      copy:
+        src: files/bash_aliases
+        dest: "{{ item.destino }}/.bash_aliases"
+        owner: "{{ item.usuario }}"
+        group: "{{ item.usuario }}"
+        mode: 0600
+      loop:
+        - usuario: "{{ default_user }}"
+          destino: "/home/{{ default_user }}"
+        - usuario: vagrant
+          destino: /home/vagrant
+        - usuario: root
+          destino: /root
+
+    - name: Sources .bash_aliases en .bashrc de cada usuario
+      become: true
+      blockinfile:
+        path: "{{ item.destino }}/.bashrc"
+        # prepend_newline: true    No funciona en esta version de ansible
+        block: |
+          if [ -f ~/.bash_aliases ]; then
+            source ~/.bash_aliases
+          fi
+        marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .bash_aliases"
+      loop:
+        - usuario: "{{ default_user }}"
+          destino: "/home/{{ default_user }}"
+        - usuario: vagrant
+          destino: /home/vagrant
+        - usuario: root
+          destino: /root
+
+    - name: Copia el script notas a /usr/local/bin
+      become: true
+      copy:
+        src: notas
+        dest: /usr/local/bin
+        owner: "{{ default_user }}"
+        group: "{{ default_user }}"
+        mode: 0755
+
+    - name: Actualiza el cliente Nextcloud_Linux, necesario para el comando notas
+      become: true
+#      vars_prompt:
+#        - name: ncupdate
+#          prompt: Quieres actualizar el cliente Nextcloud Linux? (s/N)
+      when: ncupdate == "s" or ncupdate == "S"
+      command: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
+
+
+
+# otras bondades de bash_custom (paths y docker compose completion)
+# exclude dirs de Nextcloud sync (ver ayuda del comando)
