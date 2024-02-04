@@ -155,66 +155,8 @@
         hour: 7
         job: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
 
-    - name: Copia .sudo_plugin a las carpetas home de los usuarios
-      become: true
-      copy:
-        src: files/sudo_plugin
-        dest: "{{ item.destino }}/.sudo_plugin"
-        owner: "{{ item.usuario }}"
-        group: "{{ item.usuario }}"
-        mode: 0600
-      loop:
-        - usuario: "{{ default_user }}"
-          destino: "/home/{{ default_user }}"
-        - usuario: vagrant
-          destino: /home/vagrant
-        - usuario: root
-          destino: /root
-
-    - name: Sources .sudo_plugin en .bashrc de cada usuario
-      become: true
-      blockinfile:
-        path: "{{ item.destino }}/.bashrc"
-        # prepend_newline: true    No funciona en esta version de ansible
-        block: |
-          if [ -f ~/.sudo_plugin ]; then
-            source ~/.sudo_plugin
-          fi
-        marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .sudo_plugin"
-      loop:
-        - usuario: "{{ default_user }}"
-          destino: "/home/{{ default_user }}"
-        - usuario: vagrant
-          destino: /home/vagrant
-        - usuario: root
-          destino: /root
-
-    - name: Copia .bash_aliases a las carpetas home de los usuarios
-      become: true
-      copy:
-        src: files/bash_aliases
-        dest: "{{ item.destino }}/.bash_aliases"
-        owner: "{{ item.usuario }}"
-        group: "{{ item.usuario }}"
-        mode: 0600
-      loop:
-        - usuario: "{{ default_user }}"
-          destino: "/home/{{ default_user }}"
-        - usuario: vagrant
-          destino: /home/vagrant
-        - usuario: root
-          destino: /root
-
-    - name: Sources .bash_aliases en .bashrc de cada usuario
-      become: true
-      blockinfile:
-        path: "{{ item.destino }}/.bashrc"
-        # prepend_newline: true    No funciona en esta version de ansible
-        block: |
-          if [ -f ~/.bash_aliases ]; then
-            source ~/.bash_aliases
-          fi
-        marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .bash_aliases"
+    - name: Configura el bash de los usuarios
+      include_tasks: bash_config.yml
       loop:
         - usuario: "{{ default_user }}"
           destino: "/home/{{ default_user }}"
