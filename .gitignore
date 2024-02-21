@@ -35,11 +35,14 @@ passwords.*
 
 prueba
 prueba.*
+pruebas
+pruebas.*
 
 /secrets
 /tmp
 /passwords
 /ssh_keys
+/prueba
 /pruebas
 /.vagrant
 Vagrantfile
