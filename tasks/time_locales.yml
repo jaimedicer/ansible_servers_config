@@ -1,0 +1,29 @@
+---
+- name: Set timezone
+  become: true
+  timezone:
+    name: "{{ time_zone }}"
+  notify: restart cron
+
+- name: Se asegura que ntp está activado
+  become: true
+  systemd:
+    name: systemd-timesyncd
+    state: started
+    enabled: true
+  notify:
+    - restart ntp
+    - restart cron
+
+- name: Generación locales
+  become: true
+  community.general.locale_gen:
+    name: es_ES.UTF-8
+
+- name: Configuración locales. Skipping si ya está en español.
+  become: true
+  shell: |
+    localectl set-locale es_ES.UTF-8
+    localectl set-x11-keymap es
+  when: ansible_facts['env']['LANG'] != "es_ES.UTF-8"
+  notify: reboot

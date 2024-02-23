@@ -1,0 +1,22 @@
+---
+- name: Actualiza todos los paquetes
+  become: true
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+    upgrade: full
+
+- name: Instala algunos paquetes si no están
+  become: true
+  apt:
+    name:
+      - tree
+      - adduser
+      - sudo
+      - python3
+      - python3-passlib
+      - nextcloud-desktop-cmd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+

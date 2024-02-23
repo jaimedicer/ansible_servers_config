@@ -38,3 +38,21 @@
         source ~/.bash_aliases
       fi
     marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .bash_aliases"
+
+- name: Exports EDITOR=nano para los usuarios de este play
+  become: true
+  blockinfile:
+    path: "{{ item.destino }}/.bashrc"
+    # prepend_newline: true    No funciona en esta version de ansible
+    block: |
+      export EDITOR=/usr/bin/nano
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .bash_aliases"
+
+- name: Crea directorio bin/ en la carpeta de los usuarios.
+  become: true
+  file:
+    path: "{{ item.destino }}/bin"
+    owner: "{{ item.usuario }}"
+    group: "{{ item.usuario }}"
+    state: directory
+

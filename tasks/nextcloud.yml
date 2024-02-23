@@ -1,0 +1,70 @@
+---
+- name: Crea carpeta Nextcloud_Linux
+  become: true
+  file:
+    path: "/home/{{ default_user }}/Nextcloud_Linux"
+    state: directory
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+
+- name: Copia .ncsync a /home/{{ default_user }}
+  become: true
+  template:
+    src: templates/ncsync.j2
+    dest: "/home/{{ default_user }}/.ncsync"
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: 0600
+
+- name: Sources .ncsync en .bashrc de cada usuario
+  become: true
+  blockinfile:
+    path: "/home/{{ default_user }}/.bashrc"
+    # prepend_newline: true    No funciona en esta version de ansible
+    block: |
+      if [ -f ~/.ncsync ]; then
+        source ~/.ncsync
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .ncsync"
+
+- name: Crea directorio /home/{{ default_user }}/bin
+  become: true
+  file:
+    path: "/home/{{ default_user }}/bin"
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    state: directory
+
+- name: Copia nextcloud_linux_update.sh a /home/{{ default_user }}/bin
+  become: true
+  template:
+    src: templates/nextcloud_linux_update.sh.j2
+    dest: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: 0700
+
+- name: Añade orden para actualizar Nextcloud Linux a diario a las 7 AM
+  become: true
+  cron:
+    name: Nextcloud Linux update
+    user: "{{ default_user }}"
+    hour: 7
+    job: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
+
+- name: Copia el script notas a /usr/local/bin
+  become: true
+  copy:
+    src: notas
+    dest: /usr/local/bin
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: 0755
+
+- name: Actualiza el cliente Nextcloud_Linux, necesario para el comando notas
+  become: true
+#  vars_prompt:
+#    - name: ncupdate
+#      prompt: Quieres actualizar el cliente Nextcloud Linux? (s/N)
+  when: ncupdate == "s" or ncupdate == "S"
+  command: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"

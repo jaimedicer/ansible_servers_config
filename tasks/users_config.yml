@@ -1,0 +1,39 @@
+---
+- name: Asigna la salida de /etc/passwd a la var usuarios
+  command: cat /etc/passwd
+  register: usuarios
+  changed_when: false
+
+- name: Crea usuarios {{ default_user }} y root y cambia contraseñas.
+  become: true
+  when:  default_user is not in usuarios.stdout
+  no_log: true
+  # Esto está en un bloque porque asume que si {{ default_user }} ya existe,
+  #   ya ha cambiado las contraseñas (incluida la de root).
+  # OJO esto no tiene por qué ser así.
+  block:
+    - name: Crea usuario {{ default_user }} si aun no existe y configura contraseña.
+      user:
+        name: "{{ default_user }}"
+        groups:
+          - users
+          - sudo
+        append: true
+        create_home: true
+        shell: /bin/bash
+        state: present
+        password: "{{ default_user_password | password_hash('sha512') }}"
+    - name: Cambia contraseña al usuario root.
+      user:
+        name: root
+        password: "{{ root_password | password_hash('sha512') }}"
+
+- name: Configura el bash de cada usuario en un loop
+  include_tasks: tasks/bash_config_in_users_config_loop.yml
+  loop:
+    - usuario: "{{ default_user }}"
+      destino: "/home/{{ default_user }}"
+    # - usuario: vagrant
+    #   destino: /home/vagrant
+    - usuario: root
+      destino: /root

@@ -1,5 +1,8 @@
+[test]
+test ansible_host=192.168.52.99
+
 [vm]
 docker ansible_host=192.168.52.17
 
-[vagrant:vars]
+[all:vars]
 ansible_user=jaime
