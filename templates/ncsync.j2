@@ -1,5 +1,5 @@
-# Exporta ruta al directorio Nextcloud_Linux
-export NEXTCLOUD=$(find /home/{{ default_user }}/Next* -type d -name Nextcloud_Linux)
+# Exporta ruta del directorio Nextcloud_basic_client
+export NEXTCLOUD=$(find /home/{{ default_user }}/Next* -type d -name Nextcloud_basic_client)
 
 # FUNCION para el alias ncsync (no se puede hacer un alias directamente ya que da error por las comillas)
 nsync_function () {
@@ -10,5 +10,3 @@ nsync_function () {
 if [ $(which nextcloudcmd) -a "$NEXTCLOUD" ]; then
         alias ncsync='nsync_function'
 fi
-
-

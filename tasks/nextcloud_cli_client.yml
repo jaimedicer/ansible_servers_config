@@ -8,10 +8,10 @@
     update_cache: true
     cache_valid_time: 3600
 
-- name: Crea carpeta Nextcloud_Linux
+- name: Crea carpeta Nextcloud_basic_client
   become: true
   file:
-    path: "/home/{{ default_user }}/Nextcloud_Linux"
+    path: "/home/{{ default_user }}/Nextcloud_basic_client"
     state: directory
     owner: "{{ default_user }}"
     group: "{{ default_user }}"
@@ -25,7 +25,7 @@
     group: "{{ default_user }}"
     mode: 0600
 
-- name: Sources .ncsync en .bashrc de cada usuario
+- name: Añade .ncsync en el .bashrc de {{ default_user }}
   become: true
   blockinfile:
     path: "/home/{{ default_user }}/.bashrc"
@@ -34,15 +34,18 @@
       if [ -f ~/.ncsync ]; then
         source ~/.ncsync
       fi
-    marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .ncsync"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: Añade .ncsync"
 
-- name: Crea directorio /home/{{ default_user }}/bin
+- name: Crea directorios bin/ y log/ en  /home/{{ default_user }}/
   become: true
   file:
-    path: "/home/{{ default_user }}/bin"
+    path: "/home/{{ default_user }}/{{ item }}"
     owner: "{{ default_user }}"
     group: "{{ default_user }}"
     state: directory
+  loop:
+    - bin
+    - log
 
 - name: Copia nextcloud_linux_update.sh a /home/{{ default_user }}/bin
   become: true
@@ -56,7 +59,7 @@
 - name: Añade orden para actualizar Nextcloud Linux a diario a las 7 AM
   become: true
   cron:
-    name: Nextcloud Linux update
+    name: Nextcloud_basic_client update
     user: "{{ default_user }}"
     hour: 7
     job: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
@@ -70,10 +73,13 @@
     group: "{{ default_user }}"
     mode: 0755
 
-- name: Actualiza el cliente Nextcloud_Linux, necesario para el comando notas
+- name: Stats Notas.txt para luego actualizar Nextcloud o no.
+  stat:
+    path: "/home/{{ default_user }}/Nextcloud_basic_client/Notas/Notas.txt"
+  register: stat_notas
+
+- name: Actualiza el cliente Nextcloud_basic_client, necesario para el comando notas.
   become: true
-#  vars_prompt:
-#    - name: ncupdate
-#      prompt: Quieres actualizar el cliente Nextcloud Linux? (s/N)
-  when: ncupdate == "s" or ncupdate == "S"
+  when: stat_notas.stat.exists == false
   command: "/home/{{ default_user }}/bin/nextcloud_linux_update.sh"
+  no_log: true

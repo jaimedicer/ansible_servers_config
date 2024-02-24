@@ -19,3 +19,32 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: Crea los directorios /root/bin y /root/log
+  become: true
+  file:
+    path: "/root/{{ item }}"
+    state: directory
+    mode: '755'
+    owner: root
+    group: root
+  loop:
+    - bin
+    - log
+
+- name: Copia update_reboot.sh a /root/bin
+  become: true
+  copy:
+    src: update_reboot.sh
+    dest: /root/bin/update_reboot.sh
+    owner: root
+    group: root
+    mode: '750'
+
+- name: Añade tarea al cron de root para actualizarse y reiniciarse a las 5:30h
+  become: true
+  cron:
+    name: update_and_reboot
+    user: root
+    hour: 5
+    minute: 30
+    job: /root/bin/update_reboot.sh

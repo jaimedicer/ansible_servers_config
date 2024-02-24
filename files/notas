@@ -7,7 +7,7 @@
 
 file=$(find /home/*/Nex* -type f -name Notas.txt)
 
-#echo "file es $file"									# DEBUG
+#echo "file es $file"						# DEBUG
 
 if [ -z $file ]				# no existe el fichero Notas.txt
 then
@@ -47,42 +47,42 @@ fi
 ### DEPURACION NUM PARAMETROS ###
 
 check_params () {
-	if [ $# -ne $params ]                                 # el número de parámetros no es correcto.
+	if [ $# -ne $params ]                   # el número de parámetros no es correcto.
 	then
-#		echo "\$\# = $# y \$params = $params"					# DEBUG
+#		echo "\$\# = $# y \$params = $params"			# DEBUG
        		echo ""
        		echo "ERROR: Número de parámetros erróneo."
-       		help   
+       		help
        		exit 37
 	fi
 }
 
 
 case $1 in
-	-c | --clase) 	echo "S1 es la opcion -c"			## -c clase
-			params=2					## num params correcto
+	-c | --clase) 	echo "S1 es la opcion -c"		# -c clase
+			params=2				## num params correcto
 			check_params "$@" ;;
 
-	-l | --list) 	echo "S1 es la opcion -l"			## -l lista clases
+	-l | --list) 	echo "S1 es la opcion -l"		## -l lista clases
 			params=1
 			check_params "$@" ;;
 
-	-t | --todos) 				## -t lista comandos
+	-t | --todos) 						## -t lista comandos
 			params=1
 			check_params "$@"
 			grep ^[[:alnum:]]*:[^:] $file | sort ;;
 
-	-h | --help) 	echo "S1 es la opción -h"				## -h help
+	-h | --help) 	echo "S1 es la opción -h"		## -h help
 			params=1
 			check_params "$@"
 			help ;;
 
 	-*) 	echo ""
-		echo "ERROR: Opción no reconocida"				## opción errónea
+		echo "ERROR: Opción no reconocida"		## opción errónea
 		help
 		exit 5 ;;
 
-	*) 	# echo "S1 es el comando"					## comando (no opción)
+	*) 	# echo "S1 es el comando"			## comando (no opción)
 		params=1
                 check_params "$@"
 		if [ $(grep ^$1: $file | wc -l) -eq 0 ]         # no hay una entrada para ese comando
