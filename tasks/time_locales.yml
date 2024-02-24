@@ -27,3 +27,7 @@
     localectl set-x11-keymap es
   when: ansible_facts['env']['LANG'] != "es_ES.UTF-8"
   notify: reboot
+
+- name: Flush handlers.
+  meta:
+    flush_handlers

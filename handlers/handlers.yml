@@ -1,0 +1,17 @@
+---
+- name: restart cron
+  become: true
+  systemd:
+    name: cron
+    state: restarted
+
+- name: restart ntp
+  become: true
+  systemd:
+    name: systemd-timesyncd
+    state: restarted
+
+- name: reboot
+  become: true
+  reboot:
+

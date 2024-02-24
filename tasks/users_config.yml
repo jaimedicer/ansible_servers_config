@@ -1,32 +1,79 @@
 ---
-- name: Asigna la salida de /etc/passwd a la var usuarios
-  command: cat /etc/passwd
-  register: usuarios
-  changed_when: false
-
-- name: Crea usuarios {{ default_user }} y root y cambia contraseñas.
+- name: Lee el salt de los passwords en /etc/shadow
   become: true
-  when:  default_user is not in usuarios.stdout
   no_log: true
-  # Esto está en un bloque porque asume que si {{ default_user }} ya existe,
-  #   ya ha cambiado las contraseñas (incluida la de root).
-  # OJO esto no tiene por qué ser así.
-  block:
-    - name: Crea usuario {{ default_user }} si aun no existe y configura contraseña.
-      user:
-        name: "{{ default_user }}"
-        groups:
-          - users
-          - sudo
-        append: true
-        create_home: true
-        shell: /bin/bash
-        state: present
-        password: "{{ default_user_password | password_hash('sha512') }}"
-    - name: Cambia contraseña al usuario root.
-      user:
-        name: root
-        password: "{{ root_password | password_hash('sha512') }}"
+  shell: |
+    cat /etc/shadow | grep {{ item }} | cut -d '$' -f 4
+  changed_when: false
+  loop:
+    - "{{ default_user }}"
+    - root
+  register: salt
+
+- name: Lee el hash de los passwords en /etc/shadow
+  become: true
+  no_log: true
+  shell: |
+    cat /etc/shadow | grep {{ item }} | cut -d ':' -f 2
+  changed_when: false
+  loop:
+    - "{{ default_user }}"
+    - root
+  register: shadow_hash
+
+- name: Genera el hash de la contraseñas en secrets.yml
+  delegate_to: localhost
+  no_log: true
+  command: "mkpasswd -m sha-512 -R 656000 -S {{ item.salt }} {{ item.contraseña }}"
+  register: secrets_hash
+  changed_when: false
+  loop:
+    - contraseña: "{{ default_user_password }}"
+      salt: "{{ salt['results'][0]['stdout'] }}"
+    - contraseña: "{{ root_password }}"
+      salt: "{{ salt['results'][1]['stdout'] }}"
+
+- name: debug shadow_hash['results'][0]['stdout'].
+  debug:
+    var: shadow_hash['results'][0]['stdout']
+
+- name: debug secrets_hash['results'][0]['stdout'].
+  debug:
+    var: secrets_hash['results'][0]['stdout']
+
+- name: debug shadow_hash['results'][1]['stdout'].
+  debug:
+    var: shadow_hash['results'][1]['stdout']
+
+- name: debug secrets_hash['results'][1]['stdout'].
+  debug:
+    var: secrets_hash['results'][1]['stdout']
+
+
+- name: Crea usuario {{ default_user }} y resetea contraseña a la de secrets.yml
+  become: true
+  no_log: true
+  when: shadow_hash['results'][0]['stdout'] != secrets_hash['results'][0]['stdout']
+  user:
+    name: "{{ default_user }}"
+    groups:
+      - users
+      - sudo
+    append: true
+    create_home: true
+    shell: /bin/bash
+    state: present
+    password: "{{ default_user_password | password_hash('sha512') }}"
+
+- name: Asigna contraseña al usuario root.
+  become: true
+  no_log: true
+  when: shadow_hash['results'][1]['stdout'] != secrets_hash['results'][1]['stdout']
+  user:
+    name: root
+    password: "{{ root_password | password_hash('sha512') }}"
+
+
 
 - name: Configura el bash de cada usuario en un loop
   include_tasks: tasks/bash_config_in_users_config_loop.yml

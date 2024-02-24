@@ -8,7 +8,7 @@
     group: "{{ item.usuario }}"
     mode: 0600
 
-- name: Sources .sudo_plugin en .bashrc de cada usuario
+- name: Añade .sudo_plugin en .bashrc de cada usuario
   become: true
   blockinfile:
     path: "{{ item.destino }}/.bashrc"
@@ -17,7 +17,7 @@
       if [ -f ~/.sudo_plugin ]; then
         source ~/.sudo_plugin
       fi
-    marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .sudo_plugin"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: Añade .sudo_plugin"
 
 - name: Copia .bash_aliases a las carpetas home de los usuarios
   become: true
@@ -28,7 +28,7 @@
     group: "{{ item.usuario }}"
     mode: 0600
 
-- name: Sources .bash_aliases en .bashrc de cada usuario
+- name: Añade .bash_aliases en .bashrc de cada usuario
   become: true
   blockinfile:
     path: "{{ item.destino }}/.bashrc"
@@ -37,7 +37,7 @@
       if [ -f ~/.bash_aliases ]; then
         source ~/.bash_aliases
       fi
-    marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .bash_aliases"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: Añade .bash_aliases"
 
 - name: Exports EDITOR=nano para los usuarios de este play
   become: true
@@ -46,7 +46,7 @@
     # prepend_newline: true    No funciona en esta version de ansible
     block: |
       export EDITOR=/usr/bin/nano
-    marker: "# {mark} ANSIBLE MANAGED BLOCK: Sources .bash_aliases"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: Editor por defecto nano"
 
 - name: Crea directorio bin/ en la carpeta de los usuarios.
   become: true

@@ -1,7 +1,7 @@
-[test]
-test ansible_host=192.168.52.99
+[test_gr]
+test ansible_host=192.168.52.98
 
-[vm]
+[vms]
 docker ansible_host=192.168.52.17
 
 [all:vars]

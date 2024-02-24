@@ -1,10 +1,14 @@
-
 ---
+# En el host a configurar necesitamos que sudo esté instalado y que el usuario pertenezca
+#   al grupo sudo. Tambien necesitamos copiar al servidor las claves publicas ssh de ansible.
+#
+# En el ordenador control necesitamos el paquete whois y python3-passlib.
+
 - name: Playbook principal
-  hosts: test
+  hosts: test_gr
 
   vars_files:
-    - secrets.yml
+    - vars/secrets.yml
   vars_prompt:
     - name: ncupdate
       prompt: ¿Quieres actualizar el cliente Nextcloud_Linux al final de la configuración? (s/N)
@@ -12,24 +16,14 @@
       default: "no"
 
   handlers:
-    - name: restart cron
-      become: true
-      systemd:
-        name: cron
-        state: restarted
-    - name: restart ntp
-      become: true
-      systemd:
-        name: systemd-timesyncd
-        state: restarted
-    - name: reboot
-      become: true
-      reboot:
-
+    # restart cron, restart ntp, reboot
+    - import_tasks: handlers/handlers.yml
   tasks:
-#  - import_tasks: tasks/time_locales.yml
+   - import_tasks: tasks/time_locales.yml
    - import_tasks: tasks/paquetes.yml
    - import_tasks: tasks/users_config.yml
+   - meta:
+       end_play
    - import_tasks: tasks/nextcloud.yml
 
 # otras bondades de bash_custom (paths y docker compose completion)

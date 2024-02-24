@@ -1,4 +1,13 @@
 ---
+- name: Instala nextcloud-desktop-cmd
+  become: true
+  apt:
+    name:
+      - nextcloud-desktop-cmd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
 - name: Crea carpeta Nextcloud_Linux
   become: true
   file:
