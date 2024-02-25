@@ -1,0 +1,13 @@
+---
+shares:
+  seagate:
+    nombre_share: Seagate  # (en el servidor)
+    punto_montaje: /mnt/Seagate
+    ip: 192.168.52.10
+    path_credentials: /home/{{ default_user }}/.credentials_smb
+  wd4:
+    nombre_share: wd4
+    punto_montaje: /mnt/wd4
+    ip: 192.168.52.10
+    path_credentials: /home/{{ default_user }}/.credentials_smb
+...

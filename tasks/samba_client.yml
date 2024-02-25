@@ -1,0 +1,86 @@
+---
+- name: Instalación paquetes necesarios.
+  become: true
+  apt:
+    name:
+      - samba
+      - cifs-utils
+      - ntfs-3g
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Creación directorios (puntos de montaje).
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: '755'
+  loop:
+    - "{{ shares.seagate.punto_montaje }}"
+#   - "{{ shares.wd4.punto_montaje }}"
+
+- name: Recursivamente hago a {{ default_user }} el propietario del contenido de los dirs.
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    recurse: true
+  loop:
+    - "{{ shares.seagate.punto_montaje }}"
+#   - "{{ shares.wd4.punto_montaje }}"
+
+- name: Leo si el usuario samba ya existe.
+  become: true
+  shell: |
+    pdbedit -L | grep {{ default_user }} | wc -l
+  changed_when: false
+  register: samba_user_exists
+
+- name: Creo el usuario y contraseña samba de {{ default_user }} si no existe.
+  no_log: true
+  become: true
+  when: samba_user_exists['stdout'] == "0"
+  shell: |
+    (echo {{ default_user_samba_password }} ; echo {{ default_user_samba_password }}) | smbpasswd -a {{ default_user }} -s
+  register: log
+
+- name: Incluyo el share en fstab
+  become: true
+  lineinfile:
+    path: /etc/fstab
+    regexp: "{{ item.nombre_share }}"
+    line: "//{{ item.ip }}/{{ item.nombre_share }}  {{ item.punto_montaje }}  cifs  auto,uid={{ default_user }},gid={{ default_user }},relatime,credentials={{ item.path_credentials }},nofail,x-systemd.automount 0 0"
+    state: present
+  loop:
+    - "{{ shares.seagate }}"
+#   - "{{ shares.wd4 }}"
+
+- name: Genero el fichero vacío ~/.credentials_smb
+  file:
+    path: "/home/{{ default_user }}/.credentials_smb"
+    state: touch
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: '600'
+    modification_time: preserve
+    access_time: preserve
+
+- name: Genero el contenido de ~/.credentials_smb
+  no_log: true
+  lineinfile:
+    path: "/home/{{ default_user }}/.credentials_smb"
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "username={{ default_user }}"
+    - "password={{ default_user_samba_password }}"
+
+- name: Montamos las unidades.
+  become: true
+  shell: |
+    mount -a
+
