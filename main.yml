@@ -14,10 +14,10 @@
     - import_tasks: handlers/handlers.yml
 
   tasks:
-#   - import_tasks: tasks/time_locales.yml
-#   - import_tasks: tasks/paquetes.yml
-   - import_tasks: tasks/users_config.yml
-   - import_tasks: tasks/nextcloud_cli_client.yml
+    - import_tasks: tasks/time_locales.yml
+    - import_tasks: tasks/paquetes.yml
+    - import_tasks: tasks/users_config.yml
+    - import_tasks: tasks/nextcloud_basic_client.yml
+    - import_tasks: tasks/docker.yml
 
 # otras bondades de bash_custom (paths y docker compose completion)
-# exclude dirs de Nextcloud sync (ver ayuda del comando)
