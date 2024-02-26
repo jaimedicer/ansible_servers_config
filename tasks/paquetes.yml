@@ -6,6 +6,16 @@
     cache_valid_time: 3600
     upgrade: full
 
+- name: Crea el directorio /home/{{ default_user }}/.local/share/tldr (hay un bug si no).
+  file:
+    path: "/home/{{ default_user }}/.local/share/tldr"
+    state: directory
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: '755'
+    modification_time: preserve
+    access_time: preserve
+
 - name: Instala algunos paquetes si no están
   become: true
   apt:
@@ -15,6 +25,8 @@
       - sudo
       - python3
       - python3-passlib
+      - tldr
+      - rsync
     state: present
     update_cache: true
     cache_valid_time: 3600

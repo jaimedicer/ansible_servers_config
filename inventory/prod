@@ -1,8 +1,15 @@
 [test_gr]
 test ansible_host=192.168.52.98
+test2 ansible_host=192.168.52.99
 
 [vms]
-docker ansible_host=192.168.52.17
+docker ansible_host=192.168.52.7
+
+[servers]
+docker ansible_host=192.168.52.7
+
 
 [all:vars]
 ansible_user=jaime
+
+

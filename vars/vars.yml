@@ -10,4 +10,7 @@ shares:
     punto_montaje: /mnt/wd4
     ip: 192.168.52.10
     path_credentials: /home/{{ default_user }}/.credentials_smb
+
+time_zone: Europe/Madrid
+
 ...

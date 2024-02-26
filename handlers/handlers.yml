@@ -11,6 +11,12 @@
     name: systemd-timesyncd
     state: restarted
 
+- name: restart ssh
+  become: true
+  systemd:
+    name: sshd.service
+    state: restarted
+
 - name: reboot
   become: true
   reboot:

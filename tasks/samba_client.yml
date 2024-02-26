@@ -14,21 +14,7 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: "{{ default_user }}"
-    group: "{{ default_user }}"
     mode: '755'
-  loop:
-    - "{{ shares.seagate.punto_montaje }}"
-#   - "{{ shares.wd4.punto_montaje }}"
-
-- name: Recursivamente hago a {{ default_user }} el propietario del contenido de los dirs.
-  become: true
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ default_user }}"
-    group: "{{ default_user }}"
-    recurse: true
   loop:
     - "{{ shares.seagate.punto_montaje }}"
 #   - "{{ shares.wd4.punto_montaje }}"
@@ -79,8 +65,15 @@
     - "username={{ default_user }}"
     - "password={{ default_user_samba_password }}"
 
+- name: Compruebo si la unidad ya está montada.
+  shell: |
+    findmnt | grep "{{ shares.seagate.punto_montaje }}" | wc -l
+  changed_when: false
+  register: file_systems
+
 - name: Montamos las unidades.
   become: true
+  when: file_systems['stdout'] == "0"
   shell: |
     mount -a
 
