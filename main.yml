@@ -9,7 +9,7 @@
 
   vars_files:
     - vars/vars.yml
-    - vars/secrets.yml
+    - vars/vault.yml
 
   handlers:    # restart cron, restart ntp, restart ssh, reboot
     - import_tasks: handlers/handlers.yml

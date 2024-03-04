@@ -6,9 +6,9 @@
 
   vars_files:
     - vars/vars.yml
-    - vars/secrets.yml
+    - vars/vault.yml
 
-  pre-tasks:
+  pre_tasks:
     - name: Actualizamos cache e instala algunos paquetes si no están.
       become: true
       apt:
@@ -22,8 +22,8 @@
     - import_tasks: handlers/handlers.yml
 
   tasks:
-    - import_tasks: tasks/time_locales
-    - import_tasks: tasks/samba_client
+    - import_tasks: tasks/time_locales.yml
+    - import_tasks: tasks/samba_client.yml
     - import_tasks: tasks/users_config.yml
 
     - name: Copia claves privadas ssh de {{ default_user }} con permisos 600.
@@ -59,15 +59,15 @@
         mode: '644'
 
     - name: Crea directorios Nextcloud, bin, y log en /home/{{ default_user }}/
-        file:
-          path: "/home/{{ default_user }}/{{ item }}"
-          owner: "{{ default_user }}"
-          group: "{{ default_user }}"
-          state: directory
-        loop:
-          - bin
-          - log
-          - Nextcloud
+      file:
+        path: "/home/{{ default_user }}/{{ item }}"
+        owner: "{{ default_user }}"
+        group: "{{ default_user }}"
+        state: directory
+      loop:
+        - bin
+        - log
+        - Nextcloud
 
     - name: Copia el script notas a /usr/local/bin
       become: true
