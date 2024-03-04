@@ -1,12 +1,15 @@
-[test_gr]
-test ansible_host=192.168.52.98
-test2 ansible_host=192.168.52.99
-
-[vms]
-docker ansible_host=192.168.52.7
+[test]
+test2 ansible_host=192.168.52.99 # server
+test3 ansible_host=192.168.52.98 # server
 
 [servers]
+proxmox ansible_host=192.168.52.4
 docker ansible_host=192.168.52.7
+samba ansible_host=192.168.52.10
+nextcloud ansible_host=192.168.52.11
+
+[desktop]
+rog ansible_host=192.168.52.140
 
 
 [all:vars]

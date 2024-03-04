@@ -1,0 +1,36 @@
+---
+- name: Lee la clave publica ssh de {{ default_user }}.
+  delegate_to: localhost
+  shell: |
+    cat /home/{{ default_user }}/.ssh/{{ default_user }}.pub
+  register: ssh_public_key
+  changed_when: false
+
+- name: Crea el fichero authorized_keys en el servidor si no existe.
+  file:
+    path: /home/{{ default_user }}/.ssh/authorized_keys
+    state: touch
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: '600'
+    modification_time: preserve
+    access_time: preserve
+
+- name: Copia la clave publica de {{ default_user }} al authorized_keys del servidor.
+  lineinfile:
+    path: "/home/{{ default_user }}/.ssh/authorized_keys"
+    regexp: jaime
+    line: "{{ ssh_public_key['stdout'] }}"
+
+- name: Secures sshd config
+  become: true
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - regexp: PasswordAuthentication
+      line: PasswordAuthentication no
+    - regexp: PermitRootLogin
+      line: PermitRootLogin no
+  notify: restart ssh

@@ -1,0 +1,14 @@
+Host github.com
+  IdentityFile ~/.ssh/git
+
+Host docker
+  Hostname 192.168.52.7
+
+Host samba
+  Hostname 192.168.52.10
+
+
+
+
+Host *
+  IdentityFile ~/.ssh/jaime
