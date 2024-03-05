@@ -21,11 +21,11 @@
     - root
   register: shadow_hash
 
-- name: Genera el hash de la contraseñas en secrets.yml
+- name: Genera el hash de la contraseñas en vault.yml
   delegate_to: localhost
   no_log: true
   command: "mkpasswd -m sha-512 -R 656000 -S {{ item.salt }} {{ item.contraseña }}"
-  register: secrets_hash
+  register: vault_hash
   changed_when: false
   loop:
     - contraseña: "{{ default_user_password }}"
@@ -34,10 +34,10 @@
       salt: "{{ shadow_salt['results'][1]['stdout'] }}"
   failed_when: false
 
-- name: Crea usuario {{ default_user }} y resetea contraseña a la de secrets.yml
+- name: Crea usuario {{ default_user }} y resetea contraseña a la de vault.yml
   become: true
   no_log: true
-  when: shadow_hash['results'][0]['stdout'] != secrets_hash['results'][0]['stdout']
+  when: shadow_hash['results'][0]['stdout'] != vault_hash['results'][0]['stdout']
   user:
     name: "{{ default_user }}"
     groups:
@@ -52,7 +52,7 @@
 - name: Asigna contraseña al usuario root.
   become: true
   no_log: true
-  when: shadow_hash['results'][1]['stdout'] != secrets_hash['results'][1]['stdout']
+  when: shadow_hash['results'][1]['stdout'] != vault_hash['results'][1]['stdout']
   user:
     name: root
     password: "{{ root_password | password_hash('sha512') }}"
