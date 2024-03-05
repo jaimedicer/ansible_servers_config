@@ -1,4 +1,6 @@
 ---
+# En el ordenador control necesitamos el paquete whois y python3-passlib
+
 # Pendiente testear en nueva MV. Version debian (apt)
 
 - hosts: localhost
@@ -13,7 +15,9 @@
       become: true
       apt:
         name:
-          - openssh
+          - whois
+          - python3-passlib
+          - openssh-server
           - nextcloud-desktop
         update_cache: true
         cache_valid_time: 3600
@@ -30,11 +34,11 @@
       copy:
         src: "{{ item }}"
         dest: "/home/{{ default_user }}/.ssh/"
-        owner: "{{ defaul_user }}"
+        owner: "{{ default_user }}"
         group: "{{ default_user }}"
         mode: '600'
       loop:
-        - {{ default_user }}
+        - default_user
         - ansible
         - git
 
@@ -42,11 +46,11 @@
       copy:
         src: "{{ item }}"
         dest: "/home/{{ default_user }}/.ssh/"
-        owner: "{{ defaul_user }}"
+        owner: "{{ default_user }}"
         group: "{{ default_user }}"
         mode: '644'
       loop:
-        - {{ default_user }}.pub
+        - default_user.pub
         - ansible.pub
         - git.pub
 
@@ -54,7 +58,7 @@
       copy:
         src: config
         dest: "/home/{{ default_user }}/.ssh/"
-        owner: "{{ defaul_user }}"
+        owner: "{{ default_user }}"
         group: "{{ default_user }}"
         mode: '644'
 
