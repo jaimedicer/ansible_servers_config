@@ -13,13 +13,7 @@
   register: stat_nextcloud
   changed_when: false
 
-- debug:
-    var: stat_nextcloud
-
-- meta:
-    end_play
-
 - name: Instala y configura el cliente Nextcloud
   shell: |
     nextcloud --userid {{ ncuser }} --apppassword {{ ncpassword }} --overrideserverurl {{ ncfqdn }} &
-  when: 
+  when: stat_nextcloud['stat']['exists'] == false
