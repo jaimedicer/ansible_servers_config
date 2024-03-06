@@ -1,0 +1,25 @@
+---
+- name: Actualiza cache e instala nextcloud-desktop.
+  become: true
+  apt:
+    name:
+      - nextcloud-desktop
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Genera variable en funcion de si Nextcloud ya está instalado.
+  stat:
+    path: "/home/{{ default_user }}/.config/Nextcloud/nextcloud.cfg"
+  register: stat_nextcloud
+  changed_when: false
+
+- debug:
+    var: stat_nextcloud
+
+- meta:
+    end_play
+
+- name: Instala y configura el cliente Nextcloud
+  shell: |
+    nextcloud --userid {{ ncuser }} --apppassword {{ ncpassword }} --overrideserverurl {{ ncfqdn }} &
+  when: 
