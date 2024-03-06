@@ -7,13 +7,12 @@
     update_cache: true
     cache_valid_time: 3600
 
-- name: Genera variable en funcion de si Nextcloud ya está instalado.
-  stat:
-    path: "/home/{{ default_user }}/.config/Nextcloud/nextcloud.cfg"
-  register: stat_nextcloud
-  changed_when: false
-
 - name: Instala y configura el cliente Nextcloud
-  shell: |
-    nextcloud --userid {{ ncuser }} --apppassword {{ ncpassword }} --overrideserverurl {{ ncfqdn }} &
-  when: stat_nextcloud['stat']['exists'] == false
+  shell: >
+    nextcloud
+    --userid {{ ncuser }}
+    --apppassword {{ ncpassword }}
+    --overrideserverurl {{ ncfqdn }}
+    &
+  args:
+    creates: "/home/{{ default_user }}/.config/Nextcloud/nextcloud.cfg"
