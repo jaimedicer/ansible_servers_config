@@ -10,6 +10,9 @@
     - root
   register: shadow_salt
 
+- debug:
+    var: shadow_salt
+
 - name: Lee el hash de los passwords en /etc/shadow
   become: true
   no_log: true
@@ -20,6 +23,9 @@
     - "{{ default_user }}"
     - root
   register: shadow_hash
+
+- debug:
+    var: shadow_hash
 
 - name: Genera el hash de la contraseñas en vault.yml
   delegate_to: localhost
