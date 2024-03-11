@@ -11,7 +11,9 @@
   register: shadow_salt
 
 - debug:
-    var: shadow_salt
+    var: shadow_salt['results'][0]['stdout']
+- debug:
+    var: shadow_salt['results'][1]['stdout']
 
 - name: Lee el hash de los passwords en /etc/shadow
   become: true
@@ -25,7 +27,9 @@
   register: shadow_hash
 
 - debug:
-    var: shadow_hash
+    var: shadow_hash['results'][0]['stdout']
+- debug:
+    var: shadow_hash['results'][1]['stdout']
 
 - name: Genera el hash de la contraseñas en vault.yml
   delegate_to: localhost
@@ -39,6 +43,11 @@
     - contraseña: "{{ root_password }}"
       salt: "{{ shadow_salt['results'][1]['stdout'] }}"
   failed_when: false
+
+- debug:
+    var: vault_hash['results'][0]['stdout']
+- debug:
+    var: vault_hash['results'][1]['stdout']
 
 - name: Crea usuario {{ default_user }} y resetea contraseña a la de vault.yml
   become: true
