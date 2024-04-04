@@ -12,6 +12,10 @@ nextcloud ansible_host=192.168.52.11
 rog ansible_host=192.168.52.140
 
 
+[wsl]
+wsl-lenovo ansible_host=172.29.147.83
+
+
 [all:vars]
 ansible_user=jaime
 
